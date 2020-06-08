@@ -21,7 +21,7 @@ function getEnv (key, fallback = false) {
 
 const GWEI_IN_WEI = 10 ** 9;
 
-async function getGasPrice() {
+async function getGasPrice () {
   try {
     const response = await axios.get('https://www.etherchain.org/api/gasPriceOracle');
     if (!response.data.fast) {
@@ -38,7 +38,7 @@ async function getGasPrice() {
   }
 }
 
-function getAddressFromPrivatKey(privateKey) {
+function getAddressFromPrivatKey (privateKey) {
   const privateKeyBuffer = EthUtil.toBuffer(privateKey);
   const wallet = Wallet.fromPrivateKey(privateKeyBuffer);
   return wallet.getAddressString();
@@ -47,7 +47,7 @@ function getAddressFromPrivatKey(privateKey) {
 const hex = string => '0x' + Buffer.from(string).toString('hex');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-function getContractData(name, versionData) {
+function getContractData (name, versionData) {
   return versionData.mainnet.abis.filter(abi => abi.code === name)[0];
 }
 
@@ -70,13 +70,12 @@ async function init () {
     defaultGasPrice: 5e9, // 5 gwei
   }).truffle;
 
-
   const versionDataURL = 'https://api.nexusmutual.io/version-data/data.json';
   log.info(`Loading latest master address from ${versionDataURL}`);
   const { data: versionData } = await axios.get(versionDataURL);
 
   const masterVersionData = getContractData('NXMASTER', versionData);
-  const masterAddress =  getEnv(`MASTER_ADDRESS`, masterVersionData.address);
+  const masterAddress = getEnv(`MASTER_ADDRESS`, masterVersionData.address);
   log.info(`Using NXMaster at address: ${masterAddress}`);
 
   const master = loader.fromABI(JSON.parse(masterVersionData.contractAbi), null, masterAddress);
@@ -95,11 +94,11 @@ async function init () {
         log.info(`Has pending actions. Processing..`);
         const [gasEstimate, gasPrice] = await Promise.all([
           pooledStaking.processPendingActions.estimateGas({ gas: 1e9 }),
-          getGasPrice()
+          getGasPrice(),
         ]);
         const tx = await pooledStaking.processPendingActions({
           gas: gasEstimate,
-          gasPrice
+          gasPrice,
         });
         log.info(`gasEstimate: ${gasEstimate}, gasPrice: ${gasPrice}`);
         const pendingActionsEvent = tx.logs.filter(log => log.event === PENDING_ACTIONS_PROCESSED_EVENT)[0];

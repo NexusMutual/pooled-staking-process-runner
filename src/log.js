@@ -6,11 +6,10 @@ const logger = winston.createLogger({
     new winston.transports.Console({
       format: winston.format.combine(winston.format.simple(), winston.format.timestamp()),
       level: 'info',
-      handleExceptions: true
-    })
+      handleExceptions: true,
+    }),
   ],
-  exitOnError: false
-})
+  exitOnError: false,
+});
 
-
-module.exports = logger
+module.exports = logger;
