@@ -19,7 +19,7 @@ function getEnv (key, fallback = false) {
   return value;
 }
 
-const GWEI_IN_WEI = 10 ** 9;
+const GWEI_IN_WEI = 10e9;
 
 async function getGasPrice () {
   try {
@@ -59,9 +59,7 @@ async function init () {
 
   const provider = new HDWalletProvider(privateKey, providerURL);
 
-  console.log(`private key ${privateKey}`);
   const address = getAddressFromPrivatKey(privateKey);
-  console.log(`Public address: ${address}`);
 
   const loader = setupLoader({
     provider,
@@ -90,29 +88,30 @@ async function init () {
   let hasPendingActions = await pooledStaking.hasPendingActions();
   while (true) {
     try {
-      if (hasPendingActions) {
-        log.info(`Has pending actions. Processing..`);
-        const [gasEstimate, gasPrice] = await Promise.all([
-          pooledStaking.processPendingActions.estimateGas({ gas: 1e9 }),
-          getGasPrice(),
-        ]);
-        const tx = await pooledStaking.processPendingActions({
-          gas: gasEstimate,
-          gasPrice,
-        });
-        log.info(`gasEstimate: ${gasEstimate}, gasPrice: ${gasPrice}`);
-        const pendingActionsEvent = tx.logs.filter(log => log.event === PENDING_ACTIONS_PROCESSED_EVENT)[0];
-        if (!pendingActionsEvent) {
-          log.error(`Unexpected: ${PENDING_ACTIONS_PROCESSED_EVENT} event could not be found.`);
-        } else {
-          log.info(`${PENDING_ACTIONS_PROCESSED_EVENT}.finished = ${pendingActionsEvent.args.finished}`);
-          hasPendingActions = !pendingActionsEvent.args.finished;
-        }
-      } else {
+      if (!hasPendingActions) {
         log.info(`No pending actions present. Sleeping for ${pollInterval} before checking again.`);
         await sleep(pollInterval);
         hasPendingActions = await pooledStaking.hasPendingActions();
+        continue;
       }
+      log.info(`Has pending actions. Processing..`);
+      const [gasEstimate, gasPrice] = await Promise.all([
+        pooledStaking.processPendingActions.estimateGas({ gas: 1e9 }),
+        getGasPrice(),
+      ]);
+      const tx = await pooledStaking.processPendingActions({
+        gas: gasEstimate,
+        gasPrice,
+      });
+      log.info(`gasEstimate: ${gasEstimate}, gasPrice: ${gasPrice}`);
+      const [pendingActionsEvent] = tx.logs.filter(log => log.event === PENDING_ACTIONS_PROCESSED_EVENT);
+      if (!pendingActionsEvent) {
+        log.error(`Unexpected: ${PENDING_ACTIONS_PROCESSED_EVENT} event could not be found.`);
+      } else {
+        log.info(`${PENDING_ACTIONS_PROCESSED_EVENT}.finished = ${pendingActionsEvent.args.finished}`);
+        hasPendingActions = !pendingActionsEvent.args.finished;
+      }
+
     } catch (e) {
       log.error(`Failed to handle pending actions: ${e.stack}`);
       await sleep(pollInterval);
