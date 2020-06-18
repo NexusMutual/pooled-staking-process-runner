@@ -20,6 +20,7 @@ function getEnv (key, fallback = false) {
 }
 
 const GWEI_IN_WEI = 10e9;
+const GAS_ESTIMATE_PERCENTAGE_INCREASE = 10;
 
 async function getGasPrice () {
   try {
@@ -38,7 +39,7 @@ async function getGasPrice () {
   }
 }
 
-function getAddressFromPrivatKey (privateKey) {
+function getAddressFromPrivateKey (privateKey) {
   const privateKeyBuffer = EthUtil.toBuffer(privateKey);
   const wallet = Wallet.fromPrivateKey(privateKeyBuffer);
   return wallet.getAddressString();
@@ -56,10 +57,12 @@ async function init () {
   const privateKey = getEnv(`PRIVATE_KEY`);
   const providerURL = getEnv(`PROVIDER_URL`);
   const pollInterval = parseInt(getEnv(`POLL_INTERVAL_MILLIS`));
+  const defaultIterations = parseInt(getEnv(`DEFAULT_ITERATIONS`));
+  const maxGas = parseInt(getEnv(`MAX_GAS`));
 
   const provider = new HDWalletProvider(privateKey, providerURL);
 
-  const address = getAddressFromPrivatKey(privateKey);
+  const address = getAddressFromPrivateKey(privateKey);
 
   const loader = setupLoader({
     provider,
@@ -95,15 +98,18 @@ async function init () {
         continue;
       }
       log.info(`Has pending actions. Processing..`);
-      const [gasEstimate, gasPrice] = await Promise.all([
-        pooledStaking.processPendingActions.estimateGas({ gas: 1e9 }),
-        getGasPrice(),
-      ]);
-      const tx = await pooledStaking.processPendingActions({
-        gas: gasEstimate,
+
+      const { gasEstimate, iterations } = await getGasEstimateAndIterations(pooledStaking, defaultIterations, maxGas);
+      const gasPrice = await getGasPrice();
+
+      const increasedGasEstimate = Math.floor(gasEstimate * (GAS_ESTIMATE_PERCENTAGE_INCREASE + 100) / 100);
+      log.info(`gasEstimate: ${gasEstimate} | increasedGasEstimate ${increasedGasEstimate} | gasPrice: ${gasPrice}`);
+      const tx = await pooledStaking.processPendingActions(iterations, {
+        gas: increasedGasEstimate,
         gasPrice,
       });
-      log.info(`gasEstimate: ${gasEstimate}, gasPrice: ${gasPrice}`);
+      log.info(`Gas used: ${tx.receipt.gasUsed}.`);
+
       const [pendingActionsEvent] = tx.logs.filter(log => log.event === PENDING_ACTIONS_PROCESSED_EVENT);
       if (!pendingActionsEvent) {
         log.error(`Unexpected: ${PENDING_ACTIONS_PROCESSED_EVENT} event could not be found.`);
@@ -118,7 +124,30 @@ async function init () {
       hasPendingActions = await pooledStaking.hasPendingActions();
     }
   }
+}
 
+async function getGasEstimateAndIterations(pooledStaking, defaultIterations, maxGas) {
+  let iterations = defaultIterations;
+  let gasEstimate;
+  while (true) {
+    try {
+      log.info(`Estimating gas for iterations=${iterations} and maxGas=${maxGas}`);
+      gasEstimate = await pooledStaking.processPendingActions.estimateGas(iterations, { gas: maxGas });
+    } catch (e) {
+      if (e.message.includes('base fee exceeds gas limit')) {
+        log.info(`Gas estimate of ${gasEstimate} exceeds MAX_GAS=${maxGas}. Halfing iterations amount..`);
+        iterations = Math.floor(iterations / 2);
+        continue;
+      } else {
+        throw e;
+      }
+    }
+
+    return {
+      gasEstimate,
+      iterations
+    }
+  }
 }
 
 init()
