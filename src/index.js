@@ -5,6 +5,7 @@ const HDWalletProvider = require('@truffle/hdwallet-provider');
 const Wallet = require('ethereumjs-wallet');
 const EthUtil = require('ethereumjs-util');
 const log = require('./log');
+const Web3 = require('web3');
 
 const PENDING_ACTIONS_PROCESSED_EVENT = 'PendingActionsProcessed';
 
@@ -64,6 +65,7 @@ async function init () {
 
   const address = getAddressFromPrivateKey(privateKey);
 
+  const web3 = new Web3(providerURL);
   const loader = setupLoader({
     provider,
     defaultSender: address,
@@ -104,9 +106,12 @@ async function init () {
 
       const increasedGasEstimate = Math.floor(gasEstimate * (GAS_ESTIMATE_PERCENTAGE_INCREASE + 100) / 100);
       log.info(`gasEstimate: ${gasEstimate} | increasedGasEstimate ${increasedGasEstimate} | gasPrice: ${gasPrice}`);
+      const nonce = await web3.eth.getTransactionCount(address);
+      log.info(`Nonce to be used: ${nonce}`);
       const tx = await pooledStaking.processPendingActions(iterations, {
         gas: increasedGasEstimate,
         gasPrice,
+        nonce
       });
       log.info(`Gas used: ${tx.receipt.gasUsed}.`);
 
