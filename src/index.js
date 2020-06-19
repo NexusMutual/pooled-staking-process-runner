@@ -2,8 +2,6 @@ require('dotenv').config();
 const { setupLoader } = require('@openzeppelin/contract-loader');
 const axios = require('axios');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-const Wallet = require('ethereumjs-wallet');
-const EthUtil = require('ethereumjs-util');
 const log = require('./log');
 const Web3 = require('web3');
 
@@ -40,12 +38,6 @@ async function getGasPrice () {
   }
 }
 
-function getAddressFromPrivateKey (privateKey) {
-  const privateKeyBuffer = EthUtil.toBuffer(privateKey);
-  const wallet = Wallet.fromPrivateKey(privateKeyBuffer);
-  return wallet.getAddressString();
-}
-
 const hex = string => '0x' + Buffer.from(string).toString('hex');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -61,11 +53,16 @@ async function init () {
   const defaultIterations = parseInt(getEnv(`DEFAULT_ITERATIONS`));
   const maxGas = parseInt(getEnv(`MAX_GAS`));
 
+
+  log.info(`Connecting to node at ${providerURL}.`);
+  const web3 = new Web3(providerURL);
+  await web3.eth.net.isListening();
   const provider = new HDWalletProvider(privateKey, providerURL);
 
-  const address = getAddressFromPrivateKey(privateKey);
+  const [address] = provider.getAddresses();
+  log.info(`Using first address ${address} for sending transactions.`);
+  const startBalance = await web3.eth.getBalance(address);
 
-  const web3 = new Web3(providerURL);
   const loader = setupLoader({
     provider,
     defaultSender: address,
@@ -103,11 +100,9 @@ async function init () {
 
       const { gasEstimate, iterations } = await getGasEstimateAndIterations(pooledStaking, defaultIterations, maxGas);
       const gasPrice = await getGasPrice();
-
       const increasedGasEstimate = Math.floor(gasEstimate * (GAS_ESTIMATE_PERCENTAGE_INCREASE + 100) / 100);
-      log.info(`gasEstimate: ${gasEstimate} | increasedGasEstimate ${increasedGasEstimate} | gasPrice: ${gasPrice}`);
       const nonce = await web3.eth.getTransactionCount(address);
-      log.info(`Nonce to be used: ${nonce}`);
+      log.info(JSON.stringify({ iterations, gasEstimate, increasedGasEstimate, gasPrice, nonce }));
       const tx = await pooledStaking.processPendingActions(iterations, {
         gas: increasedGasEstimate,
         gasPrice,
