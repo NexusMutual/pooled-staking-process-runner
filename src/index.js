@@ -60,8 +60,9 @@ async function init () {
   const provider = new HDWalletProvider(privateKey, providerURL);
 
   const [address] = provider.getAddresses();
-  log.info(`Using first address ${address} for sending transactions.`);
+
   const startBalance = await web3.eth.getBalance(address);
+  log.info(`Using first address ${address} for sending transactions. Current ETH balance: ${startBalance}`);
 
   const loader = setupLoader({
     provider,
