@@ -75,7 +75,7 @@ async function init () {
   const { data: versionData } = await axios.get(versionDataURL);
 
   const masterVersionData = getContractData('NXMASTER', versionData);
-  const masterAddress = getEnv(`MASTER_ADDRESS`, masterVersionData.address);
+  const masterAddress = masterVersionData.address;
   log.info(`Using NXMaster at address: ${masterAddress}`);
 
   const master = loader.fromABI(JSON.parse(masterVersionData.contractAbi), null, masterAddress);
@@ -83,7 +83,7 @@ async function init () {
 
   const pooledStakingVersionData = getContractData('PS', versionData);
   log.info(`Using PooledStaking at: ${psAddress}`);
-  const pooledStakingABI = pooledStakingVersionData ? pooledStakingVersionData.contractABI : getEnv('POOLED_STAKING_ABI');
+  const pooledStakingABI = pooledStakingVersionData.contractAbi;
 
   const pooledStaking = loader.fromABI(JSON.parse(pooledStakingABI), null, psAddress);
 
