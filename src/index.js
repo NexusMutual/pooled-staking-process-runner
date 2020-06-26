@@ -53,6 +53,7 @@ async function init () {
   const defaultIterations = parseInt(getEnv(`DEFAULT_ITERATIONS`));
   const maxGas = parseInt(getEnv(`MAX_GAS`));
   const maxGasPrice = parseInt(getEnv(`MAX_GAS_PRICE`));
+  const chainName = getEnv('CHAIN_NAME', 'mainnet');
 
 
   log.info(`Connecting to node at ${providerURL}.`);
@@ -73,8 +74,14 @@ async function init () {
   }).truffle;
 
   const versionDataURL = 'https://api.nexusmutual.io/version-data/data.json';
-  log.info(`Loading latest master address from ${versionDataURL}`);
+  log.info(`Loading latest master address for chain ${chainName} from ${versionDataURL}`);
   const { data: versionData } = await axios.get(versionDataURL);
+
+  getContractData('NXMASTER', versionData).address = process.env.MASTER_ADDRESS;
+  versionData[chainName].abis.push({
+    code: 'PS',
+    contractAbi: process.env.POOLED_STAKING_ABI
+  });
 
   const masterVersionData = getContractData('NXMASTER', versionData);
   const masterAddress = masterVersionData.address;
