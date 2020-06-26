@@ -52,6 +52,7 @@ async function init () {
   const pollInterval = parseInt(getEnv(`POLL_INTERVAL_MILLIS`));
   const defaultIterations = parseInt(getEnv(`DEFAULT_ITERATIONS`));
   const maxGas = parseInt(getEnv(`MAX_GAS`));
+  const maxGasPrice = parseInt(getEnv(`MAX_GAS_PRICE`));
 
 
   log.info(`Connecting to node at ${providerURL}.`);
@@ -101,6 +102,12 @@ async function init () {
 
       const { gasEstimate, iterations } = await getGasEstimateAndIterations(pooledStaking, defaultIterations, maxGas);
       const gasPrice = await getGasPrice();
+
+      if (gasPrice > maxGasPrice) {
+        log.warn(`Gas price ${gasPrice} exceeds MAX_GAS_PRICE=${maxGasPrice}. Not executing the the transaction at this time.`);
+        await sleep(pollInterval);
+        continue;
+      }
       const increasedGasEstimate = Math.floor(gasEstimate * (GAS_ESTIMATE_PERCENTAGE_INCREASE + 100) / 100);
       const nonce = await web3.eth.getTransactionCount(address);
       log.info(JSON.stringify({ iterations, gasEstimate, increasedGasEstimate, gasPrice, nonce }));
