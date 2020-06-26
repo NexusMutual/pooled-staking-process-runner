@@ -10,6 +10,7 @@ ensure all pooled staking actions (stakes, burns, rewards) are processed.
 Setup your environment variables as shown in the provided `.env.sample` file.
 
 | Option name | Description |
+| ------------- |:-------------:|
 | PRIVATE_KEY | Ethereum address private key containing ETH funds to spend on gas.
 | PROVIDER_URL | Provider URL used by Web3. |
 | POLL_INTERVAL_MILLIS | Polling interval to check if there are pending intervals. |
