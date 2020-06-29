@@ -63,12 +63,6 @@ async function init () {
   log.info(`Loading latest master address for chain ${CHAIN_NAME} from ${versionDataURL}`);
   const { data: versionData } = await axios.get(versionDataURL);
 
-  getContractData('NXMASTER', versionData).address = process.env.MASTER_ADDRESS;
-  versionData[CHAIN_NAME].abis.push({
-    code: 'PS',
-    contractAbi: process.env.POOLED_STAKING_ABI
-  });
-
   const masterVersionData = getContractData('NXMASTER', versionData);
   const masterAddress = masterVersionData.address;
   log.info(`Using NXMaster at address: ${masterAddress}`);
@@ -136,7 +130,7 @@ async function getGasEstimateAndIterations(pooledStaking, defaultIterations, max
       gasEstimate = await pooledStaking.processPendingActions.estimateGas(iterations, { gas: maxGas });
     } catch (e) {
       if (e.message.includes('base fee exceeds gas limit')) {
-        log.info(`Gas estimate of ${gasEstimate} exceeds MAX_GAS=${maxGas}. Halfing iterations amount..`);
+        log.info(`Gas estimate of ${gasEstimate} exceeds MAX_GAS=${maxGas}. Halving iterations amount..`);
         iterations = Math.floor(iterations / 2);
         continue;
       } else {
