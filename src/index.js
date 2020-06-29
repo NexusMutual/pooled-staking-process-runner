@@ -6,8 +6,6 @@ const log = require('./log');
 const Web3 = require('web3');
 const { hex, sleep, getEnv } = require('./utils');
 
-const PENDING_ACTIONS_PROCESSED_EVENT = 'PendingActionsProcessed';
-
 const GWEI_IN_WEI = 10e9;
 
 async function getGasPrice () {
@@ -62,12 +60,6 @@ async function init () {
   const versionDataURL = 'https://api.nexusmutual.io/version-data/data.json';
   log.info(`Loading latest master address for chain ${CHAIN_NAME} from ${versionDataURL}`);
   const { data: versionData } = await axios.get(versionDataURL);
-
-  getContractData('NXMASTER', versionData).address = process.env.MASTER_ADDRESS;
-  versionData[CHAIN_NAME].abis.push({
-    code: 'PS',
-    contractAbi: process.env.POOLED_STAKING_ABI
-  });
 
   const masterVersionData = getContractData('NXMASTER', versionData);
   const masterAddress = masterVersionData.address;
