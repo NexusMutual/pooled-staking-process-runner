@@ -15,5 +15,5 @@ function getEnv (key, fallback = false) {
 module.exports = {
   hex,
   sleep,
-  getEnv
-}
+  getEnv,
+};

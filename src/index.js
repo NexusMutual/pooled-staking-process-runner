@@ -21,7 +21,7 @@ async function getGasPrice () {
     if (!response.data.fast) {
       throw new Error(`Failed to extract 'fast' gas value.`);
     }
-      return Math.floor((response.data.fast / 10) * GWEI_IN_WEI).toString();
+    return Math.floor((response.data.fast / 10) * GWEI_IN_WEI).toString();
   }
 }
 
@@ -34,7 +34,6 @@ async function init () {
   const MAX_GAS = parseInt(getEnv(`MAX_GAS`));
   const MAX_GAS_PRICE = parseInt(getEnv(`MAX_GAS_PRICE`));
   const CHAIN_NAME = getEnv('CHAIN_NAME', 'mainnet');
-
 
   log.info(`Connecting to node at ${PROVIDER_URL}.`);
   const web3 = new Web3(PROVIDER_URL);
@@ -77,7 +76,7 @@ async function init () {
       const tx = await pooledStaking.processPendingActions(iterations, {
         gas: increasedGasEstimate,
         gasPrice,
-        nonce
+        nonce,
       });
       log.info(`Gas used: ${tx.receipt.gasUsed}.`);
     } catch (e) {
@@ -87,7 +86,7 @@ async function init () {
   }
 }
 
-async function getGasEstimateAndIterations(pooledStaking, defaultIterations, maxGas) {
+async function getGasEstimateAndIterations (pooledStaking, defaultIterations, maxGas) {
   let iterations = defaultIterations;
   let gasEstimate;
   while (true) {
@@ -106,8 +105,8 @@ async function getGasEstimateAndIterations(pooledStaking, defaultIterations, max
 
     return {
       gasEstimate,
-      iterations
-    }
+      iterations,
+    };
   }
 }
 
