@@ -39,8 +39,10 @@ async function init () {
   const POLL_INTERVAL_MILLIS = parseInt(getEnv(`POLL_INTERVAL_MILLIS`));
   const DEFAULT_ITERATIONS = parseInt(getEnv(`DEFAULT_ITERATIONS`));
   const MAX_GAS = parseInt(getEnv(`MAX_GAS`));
-  const MAX_GAS_PRICE = parseInt(getEnv(`MAX_GAS_PRICE`));
+  const MAX_GAS_PRICE_GWEI = parseInt(getEnv(`MAX_GAS_PRICE_GWEI`));
   const NETWORK = getEnv('NETWORK', 'mainnet').toLowerCase();
+
+  const MAX_GAS_PRICE = MAX_GAS_PRICE_GWEI * GWEI_IN_WEI;
 
   log.info(`Connecting to node at ${PROVIDER_URL}.`);
   const web3 = new Web3(PROVIDER_URL);
