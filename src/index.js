@@ -1,9 +1,9 @@
 require('dotenv').config();
-const { setupLoader } = require('@openzeppelin/contract-loader');
 const axios = require('axios');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-const log = require('./log');
 const Web3 = require('web3');
+const log = require('./log');
+const NexusContractLoader = require('./nexus-contract-loader');
 const { hex, sleep, getEnv } = require('./utils');
 
 const GWEI_IN_WEI = 10e9;
@@ -21,12 +21,8 @@ async function getGasPrice () {
     if (!response.data.fast) {
       throw new Error(`Failed to extract 'fast' gas value.`);
     }
-    return Math.floor((response.data.fast / 10) * GWEI_IN_WEI).toString();
+      return Math.floor((response.data.fast / 10) * GWEI_IN_WEI).toString();
   }
-}
-
-function getContractData (name, versionData) {
-  return versionData.mainnet.abis.filter(abi => abi.code === name)[0];
 }
 
 async function init () {
@@ -50,29 +46,12 @@ async function init () {
   const startBalance = await web3.eth.getBalance(address);
   log.info(`Using first address ${address} for sending transactions. Current ETH balance: ${startBalance}`);
 
-  const loader = setupLoader({
-    provider,
-    defaultSender: address,
-    defaultGas: 1e6, // 1 million
-    defaultGasPrice: 5e9, // 5 gwei
-  }).truffle;
-
   const versionDataURL = 'https://api.nexusmutual.io/version-data/data.json';
   log.info(`Loading latest master address for chain ${CHAIN_NAME} from ${versionDataURL}`);
-  const { data: versionData } = await axios.get(versionDataURL);
 
-  const masterVersionData = getContractData('NXMASTER', versionData);
-  const masterAddress = masterVersionData.address;
-  log.info(`Using NXMaster at address: ${masterAddress}`);
-
-  const master = loader.fromABI(JSON.parse(masterVersionData.contractAbi), null, masterAddress);
-  const psAddress = await master.getLatestAddress(hex('PS'));
-
-  const pooledStakingVersionData = getContractData('PS', versionData);
-  log.info(`Using PooledStaking at: ${psAddress}`);
-  const pooledStakingABI = pooledStakingVersionData.contractAbi;
-
-  const pooledStaking = loader.fromABI(JSON.parse(pooledStakingABI), null, psAddress);
+  const nexusContractLoader = new NexusContractLoader(CHAIN_NAME, versionDataURL, provider, address);
+  await nexusContractLoader.init();
+  const pooledStaking = nexusContractLoader.instance('PS');
 
   while (true) {
     try {
