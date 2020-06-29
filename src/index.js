@@ -4,19 +4,9 @@ const axios = require('axios');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 const log = require('./log');
 const Web3 = require('web3');
+const { hex, sleep, getEnv } = require('./utils');
 
 const PENDING_ACTIONS_PROCESSED_EVENT = 'PendingActionsProcessed';
-
-function getEnv (key, fallback = false) {
-
-  const value = process.env[key] || fallback;
-
-  if (!value) {
-    throw new Error(`Missing env var: ${key}`);
-  }
-
-  return value;
-}
 
 const GWEI_IN_WEI = 10e9;
 const GAS_ESTIMATE_PERCENTAGE_INCREASE = 10;
@@ -37,9 +27,6 @@ async function getGasPrice () {
     return Math.floor((response.data.fast / 10) * GWEI_IN_WEI).toString();
   }
 }
-
-const hex = string => '0x' + Buffer.from(string).toString('hex');
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 function getContractData (name, versionData) {
   return versionData.mainnet.abis.filter(abi => abi.code === name)[0];
