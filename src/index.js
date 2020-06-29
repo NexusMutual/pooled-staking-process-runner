@@ -63,6 +63,12 @@ async function init () {
   log.info(`Loading latest master address for chain ${CHAIN_NAME} from ${versionDataURL}`);
   const { data: versionData } = await axios.get(versionDataURL);
 
+  getContractData('NXMASTER', versionData).address = process.env.MASTER_ADDRESS;
+  versionData[CHAIN_NAME].abis.push({
+    code: 'PS',
+    contractAbi: process.env.POOLED_STAKING_ABI
+  });
+
   const masterVersionData = getContractData('NXMASTER', versionData);
   const masterAddress = masterVersionData.address;
   log.info(`Using NXMaster at address: ${masterAddress}`);
@@ -76,13 +82,12 @@ async function init () {
 
   const pooledStaking = loader.fromABI(JSON.parse(pooledStakingABI), null, psAddress);
 
-  let hasPendingActions = await pooledStaking.hasPendingActions();
   while (true) {
     try {
+      const hasPendingActions = await pooledStaking.hasPendingActions();
       if (!hasPendingActions) {
         log.info(`No pending actions present. Sleeping for ${POLL_INTERVAL_MILLIS} before checking again.`);
         await sleep(POLL_INTERVAL_MILLIS);
-        hasPendingActions = await pooledStaking.hasPendingActions();
         continue;
       }
       log.info(`Has pending actions. Processing..`);
@@ -104,19 +109,9 @@ async function init () {
         nonce
       });
       log.info(`Gas used: ${tx.receipt.gasUsed}.`);
-
-      const [pendingActionsEvent] = tx.logs.filter(log => log.event === PENDING_ACTIONS_PROCESSED_EVENT);
-      if (!pendingActionsEvent) {
-        log.error(`Unexpected: ${PENDING_ACTIONS_PROCESSED_EVENT} event could not be found.`);
-      } else {
-        log.info(`${PENDING_ACTIONS_PROCESSED_EVENT}.finished = ${pendingActionsEvent.args.finished}`);
-        hasPendingActions = !pendingActionsEvent.args.finished;
-      }
-
     } catch (e) {
       log.error(`Failed to handle pending actions: ${e.stack}`);
       await sleep(POLL_INTERVAL_MILLIS);
-      hasPendingActions = await pooledStaking.hasPendingActions();
     }
   }
 }
