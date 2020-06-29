@@ -47,19 +47,19 @@ function getContractData (name, versionData) {
 
 async function init () {
 
-  const privateKey = getEnv(`PRIVATE_KEY`);
-  const providerURL = getEnv(`PROVIDER_URL`);
-  const pollInterval = parseInt(getEnv(`POLL_INTERVAL_MILLIS`));
-  const defaultIterations = parseInt(getEnv(`DEFAULT_ITERATIONS`));
-  const maxGas = parseInt(getEnv(`MAX_GAS`));
-  const maxGasPrice = parseInt(getEnv(`MAX_GAS_PRICE`));
-  const chainName = getEnv('CHAIN_NAME', 'mainnet');
+  const PRIVATE_KEY = getEnv(`PRIVATE_KEY`);
+  const PROVIDER_URL = getEnv(`PROVIDER_URL`);
+  const POLL_INTERVAL_MILLIS = parseInt(getEnv(`POLL_INTERVAL_MILLIS`));
+  const DEFAULT_ITERATIONS = parseInt(getEnv(`DEFAULT_ITERATIONS`));
+  const MAX_GAS = parseInt(getEnv(`MAX_GAS`));
+  const MAX_GAS_PRICE = parseInt(getEnv(`MAX_GAS_PRICE`));
+  const CHAIN_NAME = getEnv('CHAIN_NAME', 'mainnet');
 
 
-  log.info(`Connecting to node at ${providerURL}.`);
-  const web3 = new Web3(providerURL);
+  log.info(`Connecting to node at ${PROVIDER_URL}.`);
+  const web3 = new Web3(PROVIDER_URL);
   await web3.eth.net.isListening();
-  const provider = new HDWalletProvider(privateKey, providerURL);
+  const provider = new HDWalletProvider(PRIVATE_KEY, PROVIDER_URL);
 
   const [address] = provider.getAddresses();
 
@@ -74,11 +74,11 @@ async function init () {
   }).truffle;
 
   const versionDataURL = 'https://api.nexusmutual.io/version-data/data.json';
-  log.info(`Loading latest master address for chain ${chainName} from ${versionDataURL}`);
+  log.info(`Loading latest master address for chain ${CHAIN_NAME} from ${versionDataURL}`);
   const { data: versionData } = await axios.get(versionDataURL);
 
   getContractData('NXMASTER', versionData).address = process.env.MASTER_ADDRESS;
-  versionData[chainName].abis.push({
+  versionData[CHAIN_NAME].abis.push({
     code: 'PS',
     contractAbi: process.env.POOLED_STAKING_ABI
   });
@@ -100,19 +100,19 @@ async function init () {
   while (true) {
     try {
       if (!hasPendingActions) {
-        log.info(`No pending actions present. Sleeping for ${pollInterval} before checking again.`);
-        await sleep(pollInterval);
+        log.info(`No pending actions present. Sleeping for ${POLL_INTERVAL_MILLIS} before checking again.`);
+        await sleep(POLL_INTERVAL_MILLIS);
         hasPendingActions = await pooledStaking.hasPendingActions();
         continue;
       }
       log.info(`Has pending actions. Processing..`);
 
-      const { gasEstimate, iterations } = await getGasEstimateAndIterations(pooledStaking, defaultIterations, maxGas);
+      const { gasEstimate, iterations } = await getGasEstimateAndIterations(pooledStaking, DEFAULT_ITERATIONS, MAX_GAS);
       const gasPrice = await getGasPrice();
 
-      if (gasPrice > maxGasPrice) {
-        log.warn(`Gas price ${gasPrice} exceeds MAX_GAS_PRICE=${maxGasPrice}. Not executing the the transaction at this time.`);
-        await sleep(pollInterval);
+      if (gasPrice > MAX_GAS_PRICE) {
+        log.warn(`Gas price ${gasPrice} exceeds MAX_GAS_PRICE=${MAX_GAS_PRICE}. Not executing the the transaction at this time.`);
+        await sleep(POLL_INTERVAL_MILLIS);
         continue;
       }
       const increasedGasEstimate = Math.floor(gasEstimate * (GAS_ESTIMATE_PERCENTAGE_INCREASE + 100) / 100);
@@ -135,7 +135,7 @@ async function init () {
 
     } catch (e) {
       log.error(`Failed to handle pending actions: ${e.stack}`);
-      await sleep(pollInterval);
+      await sleep(POLL_INTERVAL_MILLIS);
       hasPendingActions = await pooledStaking.hasPendingActions();
     }
   }
