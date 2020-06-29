@@ -9,7 +9,6 @@ const { hex, sleep, getEnv } = require('./utils');
 const PENDING_ACTIONS_PROCESSED_EVENT = 'PendingActionsProcessed';
 
 const GWEI_IN_WEI = 10e9;
-const GAS_ESTIMATE_PERCENTAGE_INCREASE = 10;
 
 async function getGasPrice () {
   try {
@@ -102,7 +101,7 @@ async function init () {
         await sleep(POLL_INTERVAL_MILLIS);
         continue;
       }
-      const increasedGasEstimate = Math.floor(gasEstimate * (GAS_ESTIMATE_PERCENTAGE_INCREASE + 100) / 100);
+      const increasedGasEstimate = Math.floor(gasEstimate * 1.1);
       const nonce = await web3.eth.getTransactionCount(address);
       log.info(JSON.stringify({ iterations, gasEstimate, increasedGasEstimate, gasPrice, nonce }));
       const tx = await pooledStaking.processPendingActions(iterations, {
