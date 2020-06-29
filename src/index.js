@@ -16,7 +16,7 @@ async function getGasPrice () {
     }
     return (parseInt(response.data.fast) * GWEI_IN_WEI).toString();
   } catch (e) {
-    log.warn(`Failed to get gas price from etherchain. Using fallback with ethgasstation..`);
+    log.warn(`Failed to get gas price from etherchain: ${e.stack} Using fallback with ethgasstation..`);
     const response = await axios.get('https://ethgasstation.info/json/ethgasAPI.json');
     if (!response.data.fast) {
       throw new Error(`Failed to extract 'fast' gas value.`);
