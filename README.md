@@ -16,7 +16,8 @@ Setup your environment variables as shown in the provided `.env.sample` file.
 | POLL_INTERVAL_MILLIS | Polling interval to check if there are pending intervals. |
 | DEFAULT_ITERATIONS | Default number of iterations used by processPendingActions |
 | MAX_GAS | How much gas to use at most. If it is exceeded, the number of used iterations is halved. |
-| MAX_GAS_PRICE | Max gas price in Wei that it's allow to use. Stops processing until the price falls under this treshold. 
+| MAX_GAS_PRICE_GWEI | Max gas price in GWEI that it's allow to use. Stops processing until the price falls under this treshold.
+| NETWORK | Network name. Possible values: mainnet, kovan 
 
 
 ### Run
