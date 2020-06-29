@@ -104,7 +104,7 @@ async function getGasEstimateAndIterations (pooledStaking, defaultIterations, ma
       gasEstimate = await pooledStaking.processPendingActions.estimateGas(iterations, { gas: maxGas });
     } catch (e) {
       if (e.message.includes('base fee exceeds gas limit')) {
-        log.info(`Gas estimate of ${gasEstimate} exceeds MAX_GAS=${maxGas}. Halving iterations amount..`);
+        log.info(`Gas estimate exceeds MAX_GAS=${maxGas}. Halving iterations amount..`);
         iterations = Math.floor(iterations / 2);
         continue;
       } else {
