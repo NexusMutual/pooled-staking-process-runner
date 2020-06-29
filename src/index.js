@@ -40,7 +40,7 @@ async function init () {
   const DEFAULT_ITERATIONS = parseInt(getEnv(`DEFAULT_ITERATIONS`));
   const MAX_GAS = parseInt(getEnv(`MAX_GAS`));
   const MAX_GAS_PRICE = parseInt(getEnv(`MAX_GAS_PRICE`));
-  const CHAIN_NAME = getEnv('CHAIN_NAME', 'mainnet');
+  const NETWORK = getEnv('NETWORK', 'mainnet').toLowerCase();
 
   log.info(`Connecting to node at ${PROVIDER_URL}.`);
   const web3 = new Web3(PROVIDER_URL);
@@ -53,9 +53,9 @@ async function init () {
   log.info(`Using first address ${address} for sending transactions. Current ETH balance: ${startBalance}`);
 
   const versionDataURL = 'https://api.nexusmutual.io/version-data/data.json';
-  log.info(`Loading latest master address for chain ${CHAIN_NAME} from ${versionDataURL}`);
+  log.info(`Loading latest master address for chain ${NETWORK} from ${versionDataURL}`);
 
-  const nexusContractLoader = new NexusContractLoader(CHAIN_NAME, versionDataURL, provider, address);
+  const nexusContractLoader = new NexusContractLoader(NETWORK, versionDataURL, provider, address);
   await nexusContractLoader.init();
   const pooledStaking = nexusContractLoader.instance('PS');
 
