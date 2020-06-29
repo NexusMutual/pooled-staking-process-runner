@@ -9,24 +9,31 @@ const { sleep, getEnv } = require('./utils');
 const GWEI_IN_WEI = 10e9;
 
 async function getGasPrice () {
+
+  let fast;
+  let standard;
   try {
     const response = await axios.get('https://www.etherchain.org/api/gasPriceOracle');
-    if (!response.data.fast) {
-      throw new Error(`Failed to extract 'fast' gas value.`);
+    if (!response.data.fast || !response.data.standard) {
+      throw new Error(`Failed to extract  gas values from etherchain response ${JSON.stringify(response.data)}`);
     }
-    return (parseInt(response.data.fast) * GWEI_IN_WEI).toString();
+    fast = parseInt(response.data.fast);
+    standard = parseInt(response.data.standard);
   } catch (e) {
     log.warn(`Failed to get gas price from etherchain: ${e.stack} Using fallback with ethgasstation..`);
     const response = await axios.get('https://ethgasstation.info/json/ethgasAPI.json');
-    if (!response.data.fast) {
-      throw new Error(`Failed to extract 'fast' gas value.`);
+    if (!response.data.fast || !response.data.average) {
+      throw new Error(`Failed to extract  gas values from ethgasstation response ${JSON.stringify(response.data)}.`);
     }
-    return Math.floor((response.data.fast / 10) * GWEI_IN_WEI).toString();
+    fast = response.data.fast / 10;
+    standard = response.data.average / 10;
   }
+  log.info(`Gas results: ${JSON.stringify({ fast, standard })}`);
+  const aboveAveragePrice = ((Math.floor((fast + standard)) / 2) * GWEI_IN_WEI).toString();
+  return aboveAveragePrice;
 }
 
 async function init () {
-
   const PRIVATE_KEY = getEnv(`PRIVATE_KEY`);
   const PROVIDER_URL = getEnv(`PROVIDER_URL`);
   const POLL_INTERVAL_MILLIS = parseInt(getEnv(`POLL_INTERVAL_MILLIS`));
