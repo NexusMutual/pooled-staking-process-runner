@@ -4,7 +4,7 @@ const HDWalletProvider = require('@truffle/hdwallet-provider');
 const Web3 = require('web3');
 const log = require('./log');
 const NexusContractLoader = require('./nexus-contract-loader');
-const { hex, sleep, getEnv } = require('./utils');
+const { sleep, getEnv } = require('./utils');
 
 const GWEI_IN_WEI = 10e9;
 
