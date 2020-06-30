@@ -6,7 +6,7 @@ const log = require('./log');
 const NexusContractLoader = require('./nexus-contract-loader');
 const { sleep, getEnv } = require('./utils');
 
-const GWEI_IN_WEI = 10e9;
+const GWEI_IN_WEI = 1e9;
 
 async function getGasPrice () {
 
@@ -43,6 +43,7 @@ async function init () {
   const NETWORK = getEnv('NETWORK', 'mainnet').toLowerCase();
 
   const MAX_GAS_PRICE = MAX_GAS_PRICE_GWEI * GWEI_IN_WEI;
+  log.info(`Using MAX_GAS_PRICE of ${MAX_GAS_PRICE}`);
 
   log.info(`Connecting to node at ${PROVIDER_URL}.`);
   const web3 = new Web3(PROVIDER_URL);
