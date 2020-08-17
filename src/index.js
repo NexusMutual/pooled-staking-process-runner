@@ -4,7 +4,7 @@ const Web3 = require('web3');
 const log = require('./log');
 const NexusContractLoader = require('./nexus-contract-loader');
 const { sleep, getEnv } = require('./utils');
-const { getGasPrice, PRICE_LEVEL } = require('./gas-price');
+const { getGasPrice, SPEED } = require('./gas-price');
 
 const GWEI_IN_WEI = 1e9;
 
@@ -59,7 +59,7 @@ async function init () {
       log.info(`Has pending actions. Processing..`);
 
       const { gasEstimate, iterations } = await getGasEstimateAndIterations(pooledStaking, DEFAULT_ITERATIONS, MAX_GAS);
-      const gasPrice = await getGasPrice(PRICE_LEVEL.ABOVE_STANDARD);
+      const gasPrice = await getGasPrice(SPEED.ABOVE_STANDARD);
 
       if (gasPrice > MAX_GAS_PRICE) {
         log.warn(`Gas price ${gasPrice} exceeds MAX_GAS_PRICE=${MAX_GAS_PRICE}. Not executing the the transaction at this time.`);

@@ -72,7 +72,6 @@ function getAboveStandardPrice (prices) {
 }
 
 module.exports = {
-  fetchGasPrices,
   getGasPrice,
-  SPEED
+  SPEED,
 };

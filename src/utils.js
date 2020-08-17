@@ -18,10 +18,9 @@ const to = promise => new Promise(resolve => {
     .catch(e => resolve([null, e]));
 });
 
-
 module.exports = {
   hex,
   sleep,
   getEnv,
-  to
+  to,
 };
