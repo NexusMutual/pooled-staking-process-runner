@@ -12,8 +12,16 @@ function getEnv (key, fallback = false) {
   return value;
 }
 
+const to = promise => new Promise(resolve => {
+  promise
+    .then(r => resolve([r, null]))
+    .catch(e => resolve([null, e]));
+});
+
+
 module.exports = {
   hex,
   sleep,
   getEnv,
+  to
 };
