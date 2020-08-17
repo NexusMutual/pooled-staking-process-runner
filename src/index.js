@@ -1,37 +1,12 @@
 require('dotenv').config();
-const axios = require('axios');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 const Web3 = require('web3');
 const log = require('./log');
 const NexusContractLoader = require('./nexus-contract-loader');
 const { sleep, getEnv } = require('./utils');
+const { getGasPrice, PRICE_LEVEL } = require('./gas-price');
 
 const GWEI_IN_WEI = 1e9;
-
-async function getGasPrice () {
-
-  let fast;
-  let standard;
-  try {
-    const response = await axios.get('https://www.etherchain.org/api/gasPriceOracle');
-    if (!response.data.fast || !response.data.standard) {
-      throw new Error(`Failed to extract  gas values from etherchain response ${JSON.stringify(response.data)}`);
-    }
-    fast = parseInt(response.data.fast);
-    standard = parseInt(response.data.standard);
-  } catch (e) {
-    log.warn(`Failed to get gas price from etherchain: ${e.stack} Using fallback with ethgasstation..`);
-    const response = await axios.get('https://ethgasstation.info/json/ethgasAPI.json');
-    if (!response.data.fast || !response.data.average) {
-      throw new Error(`Failed to extract  gas values from ethgasstation response ${JSON.stringify(response.data)}.`);
-    }
-    fast = response.data.fast / 10;
-    standard = response.data.average / 10;
-  }
-  log.info(`Gas results: ${JSON.stringify({ fast, standard })}`);
-  const aboveAveragePrice = ((Math.floor((fast + standard)) / 2) * GWEI_IN_WEI).toString();
-  return aboveAveragePrice;
-}
 
 async function init () {
   const PRIVATE_KEY = getEnv(`PRIVATE_KEY`);
@@ -60,6 +35,17 @@ async function init () {
 
   const nexusContractLoader = new NexusContractLoader(NETWORK, versionDataURL, provider, address);
   await nexusContractLoader.init();
+
+  const PooledStaking = require('../PooledStaking');
+  console.log(`Overriding values..`);
+  nexusContractLoader.data['PS'] = {
+    address: process.env.PS_ADDRESS,
+    code: 'PS',
+    smartContractCode: 'PS',
+    contractName: 'claimData',
+    contractAbi: PooledStaking.abi,
+  };
+
   const pooledStaking = nexusContractLoader.instance('PS');
 
   while (true) {
@@ -73,7 +59,7 @@ async function init () {
       log.info(`Has pending actions. Processing..`);
 
       const { gasEstimate, iterations } = await getGasEstimateAndIterations(pooledStaking, DEFAULT_ITERATIONS, MAX_GAS);
-      const gasPrice = await getGasPrice();
+      const gasPrice = await getGasPrice(PRICE_LEVEL.ABOVE_STANDARD);
 
       if (gasPrice > MAX_GAS_PRICE) {
         log.warn(`Gas price ${gasPrice} exceeds MAX_GAS_PRICE=${MAX_GAS_PRICE}. Not executing the the transaction at this time.`);
