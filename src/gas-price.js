@@ -51,7 +51,6 @@ const fetchGasPrices = async () => {
 /**
  * Returns a recommended gas price considering the requested speed and upper limit
  * @param speed {string}
- * @param maxGasPriceInGwei {number}
  * @return {Promise<number>}
  */
 const getGasPrice = async (speed) => {
