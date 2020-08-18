@@ -35,17 +35,6 @@ async function init () {
 
   const nexusContractLoader = new NexusContractLoader(NETWORK, versionDataURL, provider, address);
   await nexusContractLoader.init();
-
-  const PooledStaking = require('../PooledStaking');
-  console.log(`Overriding values..`);
-  nexusContractLoader.data['PS'] = {
-    address: process.env.PS_ADDRESS,
-    code: 'PS',
-    smartContractCode: 'PS',
-    contractName: 'claimData',
-    contractAbi: PooledStaking.abi,
-  };
-
   const pooledStaking = nexusContractLoader.instance('PS');
 
   while (true) {
