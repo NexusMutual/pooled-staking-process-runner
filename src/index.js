@@ -48,7 +48,7 @@ async function init () {
       log.info(`Has pending actions. Processing..`);
 
       const { gasEstimate, iterations } = await getGasEstimateAndIterations(pooledStaking, DEFAULT_ITERATIONS, MAX_GAS);
-      const gasPrice = await getGasPrice(SPEED.ABOVE_STANDARD);
+      const gasPrice = await getGasPrice(SPEED.STANDARD);
 
       if (gasPrice > MAX_GAS_PRICE) {
         log.warn(`Gas price ${gasPrice} exceeds MAX_GAS_PRICE=${MAX_GAS_PRICE}. Not executing the the transaction at this time.`);
