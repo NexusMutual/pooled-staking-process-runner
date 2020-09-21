@@ -40,30 +40,35 @@ async function init () {
   while (true) {
     try {
       const hasPendingActions = await pooledStaking.hasPendingActions();
+
       if (!hasPendingActions) {
         log.info(`No pending actions present. Sleeping for ${POLL_INTERVAL_MILLIS} before checking again.`);
         await sleep(POLL_INTERVAL_MILLIS);
         continue;
       }
-      log.info(`Has pending actions. Processing..`);
 
+      log.info(`Has pending actions. Processing..`);
       const { gasEstimate, iterations } = await getGasEstimateAndIterations(pooledStaking, DEFAULT_ITERATIONS, MAX_GAS);
-      const gasPrice = await getGasPrice(SPEED.STANDARD);
+      const gasPrice = await getGasPrice(SPEED.ABOVE_STANDARD);
 
       if (gasPrice > MAX_GAS_PRICE) {
         log.warn(`Gas price ${gasPrice} exceeds MAX_GAS_PRICE=${MAX_GAS_PRICE}. Not executing the the transaction at this time.`);
         await sleep(POLL_INTERVAL_MILLIS);
         continue;
       }
-      const increasedGasEstimate = Math.floor(gasEstimate * 1.1);
+
+      const increasedGasEstimate = Math.floor(gasEstimate * 1.3);
       const nonce = await web3.eth.getTransactionCount(address);
       log.info(JSON.stringify({ iterations, gasEstimate, increasedGasEstimate, gasPrice, nonce }));
+
       const tx = await pooledStaking.processPendingActions(iterations, {
         gas: increasedGasEstimate,
         gasPrice,
         nonce,
       });
+
       log.info(`Gas used: ${tx.receipt.gasUsed}.`);
+
     } catch (e) {
       log.error(`Failed to handle pending actions: ${e.stack}`);
       await sleep(POLL_INTERVAL_MILLIS);
