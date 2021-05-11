@@ -11,7 +11,7 @@ const SPEED = {
 };
 
 const GWEI_IN_WEI = 1e9;
-const ETHERCHAIN_URL = 'https://www.etherchain.org/api/gasPriceOracle';
+const GASNOW_URL = 'https://www.gasnow.org/api/v3/gas/price';
 const ETHGASSTATION_URL = 'https://ethgasstation.info/json/ethgasAPI.json';
 
 /**
