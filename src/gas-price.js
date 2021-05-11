@@ -20,18 +20,18 @@ const ETHGASSTATION_URL = 'https://ethgasstation.info/json/ethgasAPI.json';
  */
 const fetchGasPrices = async () => {
 
-  const [ecPrice, ecError] = await to(fetch(ETHERCHAIN_URL).then(r => r.json()));
+  const [{ data: gasNowPrice, code }, ecError] = await to(fetch(GASNOW_URL).then(r => r.json()));
 
-  if (!ecError) {
+  if (!ecError && code === 200) {
     return {
-      fastest: parseFloat(ecPrice.fastest),
-      fast: parseFloat(ecPrice.fast),
-      standard: parseFloat(ecPrice.standard),
-      safeLow: parseFloat(ecPrice.safeLow),
+      fastest: gasNowPrice.rapid / GWEI_IN_WEI,
+      fast: gasNowPrice.fast / GWEI_IN_WEI,
+      standard: gasNowPrice.standard / GWEI_IN_WEI,
+      safeLow: gasNowPrice.slow / GWEI_IN_WEI,
     };
   }
 
-  log.error(`Failed to fetch Etherchain price data, using EthGasStation as a fallback: ${ecError.stack}`);
+  log.error(`Failed to fetch GasNow price data, using EthGasStation as a fallback: ${ecError.stack} ${code} ${gasNowPrice}`);
 
   const [egsPrice, egsError] = await to(fetch(ETHGASSTATION_URL).then(r => r.json()));
 
