@@ -20,9 +20,8 @@ const ETHGASSTATION_URL = 'https://ethgasstation.info/json/ethgasAPI.json';
  */
 const fetchGasPrices = async () => {
 
-  const [{ data: gasNowPrice, code }, ecError] = await to(fetch(GASNOW_URL).then(r => r.json()));
-
-  if (!ecError && code === 200) {
+  let [{ data: gasNowPrice, code }, gasNowError] = await to(fetch(GASNOW_URL).then(r => r.json()));
+  if (!gasNowError && code === 200) {
     return {
       fastest: gasNowPrice.rapid / GWEI_IN_WEI,
       fast: gasNowPrice.fast / GWEI_IN_WEI,
@@ -31,7 +30,10 @@ const fetchGasPrices = async () => {
     };
   }
 
-  log.error(`Failed to fetch GasNow price data, using EthGasStation as a fallback: ${ecError.stack} ${code} ${gasNowPrice}`);
+  const errorMessage = gasNowError ? `${gasNowError} ${gasNowError.stack}` : `Error code: ${code}. ${JSON.stringify(gasNowPrice)}`
+  log.error(
+    `Failed to fetch GasNow price data, using EthGasStation as a fallback. ${errorMessage}`
+  );
 
   const [egsPrice, egsError] = await to(fetch(ETHGASSTATION_URL).then(r => r.json()));
 
