@@ -11,7 +11,7 @@ const SPEED = {
 };
 
 const GWEI_IN_WEI = 1e9;
-const ETHERCHAIN_URL = 'https://www.etherchain.org/api/gasPriceOracle';
+const GASNOW_URL = 'https://www.gasnow.org/api/v3/gas/price';
 const ETHGASSTATION_URL = 'https://ethgasstation.info/json/ethgasAPI.json';
 
 /**
@@ -20,18 +20,20 @@ const ETHGASSTATION_URL = 'https://ethgasstation.info/json/ethgasAPI.json';
  */
 const fetchGasPrices = async () => {
 
-  const [ecPrice, ecError] = await to(fetch(ETHERCHAIN_URL).then(r => r.json()));
-
-  if (!ecError) {
+  let [{ data: gasNowPrice, code }, gasNowError] = await to(fetch(GASNOW_URL).then(r => r.json()));
+  if (!gasNowError && code === 200) {
     return {
-      fastest: parseFloat(ecPrice.fastest),
-      fast: parseFloat(ecPrice.fast),
-      standard: parseFloat(ecPrice.standard),
-      safeLow: parseFloat(ecPrice.safeLow),
+      fastest: gasNowPrice.rapid / GWEI_IN_WEI,
+      fast: gasNowPrice.fast / GWEI_IN_WEI,
+      standard: gasNowPrice.standard / GWEI_IN_WEI,
+      safeLow: gasNowPrice.slow / GWEI_IN_WEI,
     };
   }
 
-  log.error(`Failed to fetch Etherchain price data, using EthGasStation as a fallback: ${ecError.stack}`);
+  const errorMessage = gasNowError ? `${gasNowError} ${gasNowError.stack}` : `Error code: ${code}. ${JSON.stringify(gasNowPrice)}`
+  log.error(
+    `Failed to fetch GasNow price data, using EthGasStation as a fallback. ${errorMessage}`
+  );
 
   const [egsPrice, egsError] = await to(fetch(ETHGASSTATION_URL).then(r => r.json()));
 
