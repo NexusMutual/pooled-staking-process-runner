@@ -77,26 +77,30 @@ async function init () {
 }
 
 async function getGasEstimateAndIterations (pooledStaking, defaultIterations, maxGas) {
-  let iterations = defaultIterations;
-  let gasEstimate;
-  while (true) {
-    try {
-      log.info(`Estimating gas for iterations=${iterations} and maxGas=${maxGas}`);
-      gasEstimate = await pooledStaking.processPendingActions.estimateGas(iterations, { gas: maxGas });
-    } catch (e) {
-      if (e.message.includes('base fee exceeds gas limit')) {
-        log.info(`Gas estimate exceeds MAX_GAS=${maxGas}. Halving iterations amount..`);
-        iterations = Math.floor(iterations / 2);
-        continue;
-      } else {
-        throw e;
-      }
-    }
 
-    return {
-      gasEstimate,
-      iterations,
-    };
+  let maxIterations = defaultIterations;
+
+  while (true) {
+
+    try {
+
+      log.info(`Estimating gas for maxIterations=${maxIterations} and maxGas=${maxGas}`);
+      const { iterationsLeft } = await pooledStaking.processPendingActionsReturnLeft(maxIterations);
+      const iterations = maxIterations - Number(iterationsLeft.toString());
+      const gasEstimate = await pooledStaking.processPendingActions.estimateGas(iterations, { gas: maxGas });
+
+      return { gasEstimate, iterations };
+
+    } catch (e) {
+
+      if (e.message.includes('base fee exceeds gas limit')) {
+        log.info(`Gas estimate exceeds MAX_GAS=${maxGas}. Halving max iterations amount..`);
+        maxIterations = Math.floor(maxIterations / 2);
+        continue;
+      }
+
+      throw e;
+    }
   }
 }
 
