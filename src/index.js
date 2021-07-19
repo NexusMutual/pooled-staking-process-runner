@@ -85,7 +85,7 @@ async function getGasEstimateAndIterations (pooledStaking, defaultIterations, ma
     try {
 
       log.info(`Estimating gas for maxIterations=${maxIterations} and maxGas=${maxGas}`);
-      const { iterationsLeft } = await pooledStaking.processPendingActionsReturnLeft(maxIterations);
+      const { iterationsLeft } = await pooledStaking.processPendingActionsReturnLeft.call(maxIterations);
       const iterations = maxIterations - Number(iterationsLeft.toString());
       const gasEstimate = await pooledStaking.processPendingActions.estimateGas(iterations, { gas: maxGas });
 
