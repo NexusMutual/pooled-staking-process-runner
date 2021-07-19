@@ -71,6 +71,7 @@ async function init () {
 
     } catch (e) {
       log.error(`Failed to handle pending actions: ${e.stack}`);
+      console.error(e);
       await sleep(POLL_INTERVAL_MILLIS);
     }
   }
@@ -85,7 +86,7 @@ async function getGasEstimateAndIterations (pooledStaking, defaultIterations, ma
     try {
 
       log.info(`Estimating gas for maxIterations=${maxIterations} and maxGas=${maxGas}`);
-      const { iterationsLeft } = await pooledStaking.processPendingActionsReturnLeft.call(maxIterations);
+      const { iterationsLeft } = await pooledStaking.processPendingActionsReturnLeft.call(maxIterations, { gas: maxGas });
       const iterations = maxIterations - Number(iterationsLeft.toString());
       const gasEstimate = await pooledStaking.processPendingActions.estimateGas(iterations, { gas: maxGas });
 
@@ -109,3 +110,4 @@ init()
     log.error(`Unhandled app error: ${error.stack}`);
     process.exit(1);
   });
+
